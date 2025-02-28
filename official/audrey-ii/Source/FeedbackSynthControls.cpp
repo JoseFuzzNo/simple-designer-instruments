@@ -40,6 +40,7 @@ static constexpr daisy::Pin kRevDecayKnobAdcPin         = daisy::seed::A6;  // S
 static constexpr daisy::Pin kEchoSendKnobAdcPin         = daisy::seed::A1;  // Simple bottom pin 31
 static constexpr daisy::Pin kEchoTimeKnobAdcPin         = daisy::seed::A0;  // Simple bottom pin 30
 static constexpr daisy::Pin kEchoFeedbackKnobAdcPin     = daisy::seed::A3;  // Simple bottom pin 33
+static constexpr daisy::Pin kBlendAdcPin                = daisy::seed::A11; // Simple bottom pin 43
 static constexpr daisy::Pin kOutputVolumeAdcPin         = daisy::seed::A2;  // Simple bottom pin 32
 static constexpr daisy::Pin kDelaySwitchPin             = daisy::seed::D14; // Simple bottom pin 15
 
@@ -72,7 +73,8 @@ void Controls::Update(DaisySeed &hw) {
     float delay_scale = del_sw_.Pressed() ? 0.5f : 1.0f;
     params_.UpdateNormalized(Parameter::EchoDelayTime, delay_norm * delay_scale);
     params_.UpdateNormalized(Parameter::EchoDelayFeedback,  1.0f - hw.adc.GetFloat(9));
-    params_.UpdateNormalized(Parameter::OutputVolume,       1.0f - hw.adc.GetFloat(10));
+    params_.UpdateNormalized(Parameter::BlendMix, 1.0f - hw.adc.GetFloat(10));
+    params_.UpdateNormalized(Parameter::OutputVolume,       1.0f - hw.adc.GetFloat(11));
 }
 
 void Controls::initADCs(DaisySeed &hw) {
@@ -88,7 +90,8 @@ void Controls::initADCs(DaisySeed &hw) {
     config[7].InitSingle(kEchoSendKnobAdcPin);
     config[8].InitSingle(kEchoTimeKnobAdcPin);
     config[9].InitSingle(kEchoFeedbackKnobAdcPin);
-    config[10].InitSingle(kOutputVolumeAdcPin);
+    config[10].InitSingle(kBlendAdcPin);
+    config[11].InitSingle(kOutputVolumeAdcPin);
 
     hw.adc.Init(config, kNumAdcChannels);
     hw.adc.Start();
@@ -134,6 +137,10 @@ void Controls::registerParams(Engine &engine) {
     // Echo Delay feedback
     params_.Register(Parameter::EchoDelayFeedback, 0.0f, 0.0f, 1.5f,
         std::bind(&Engine::SetEchoDelayFeedback, &engine, _1));
+
+    // Blend
+    params_.Register(Parameter::BlendMix, 0.5f, 0.0f, 1.0f,
+        std::bind(&Engine::SetBlendMix, &engine, _1), 0.05f, daisysp::Mapping::LINEAR);
 
     // Output level
     params_.Register(Parameter::OutputVolume, 0.5f, 0.0f, 1.0f,

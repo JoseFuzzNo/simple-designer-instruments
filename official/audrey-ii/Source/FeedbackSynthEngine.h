@@ -39,9 +39,10 @@ class Engine {
         void SetReverbMix(const float mix);
         void SetReverbFeedback(const float time);
 
+        void SetBlendMix(const float blend);
         void SetOutputLevel(const float level);
 
-        void Process(float in, float &outL, float &outR);
+        void Process(float inL, float inR, float &outL, float &outR);
 
     private:
         // long enough for 250ms at 48kHz
@@ -53,6 +54,7 @@ class Engine {
         float fb_gain_ = 0.0f;
         float echo_send_ = 0.0f;
         float verb_mix_ = 0.0f;
+        float blend_mix_ = 0.5f;
         float output_level_ = 0.5f;
 
         float fb_delay_smooth_coef_;

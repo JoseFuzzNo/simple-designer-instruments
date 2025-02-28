@@ -18,7 +18,7 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     controls.Update(hw);
     controls.Process();
     for (size_t i=0; i<size; i++) {
-        engine.Process(IN_L[i], OUT_L[i], OUT_R[i]);
+        engine.Process(IN_L[i], IN_R[i], OUT_L[i], OUT_R[i]);
     }
 }
 

@@ -94,28 +94,30 @@ void Engine::SetReverbMix(const float mix) {
 
 void Engine::SetReverbFeedback(const float time) { verb_->SetFeedback(time); }
 
+void Engine::SetBlendMix(const float blend) { blend_mix_ = blend; }
+
 void Engine::SetOutputLevel(const float level) { output_level_ = level; }
 
-void Engine::Process(float in, float &outL, float &outR) {
+void Engine::Process(float inL, float inR, float &outL, float &outR) {
   // --- Update audio-rate-smoothed control params ---
 
   fonepole(fb_delay_samp_, fb_delay_samp_target_, fb_delay_smooth_coef_);
 
   // --- Process Samples ---
 
-  float inL, inR, sampL, sampR, echoL, echoR, verbL, verbR;
+  float inLFb, inRFb, sampL, sampR, echoL, echoR, verbL, verbR;
   const float noise_samp = noise_.Process();
 
   // ---> Feedback Loop
 
   // Get noise + feedback output
-  inL = fb_delayline_[0].Read(fb_delay_samp_) + noise_samp + in;
-  inR = fb_delayline_[1].Read(daisysp::fmax(1.0f, fb_delay_samp_ - 4.f)) +
-        noise_samp + in;
+  inLFb = fb_delayline_[0].Read(fb_delay_samp_) + noise_samp + inL * 4.f;
+  inRFb = fb_delayline_[1].Read(daisysp::fmax(1.0f, fb_delay_samp_ - 4.f)) +
+        noise_samp + inR * 4.f;
 
   // Process through KS resonator
-  sampL = strings_[0].Process(inL);
-  sampR = strings_[1].Process(inR);
+  sampL = strings_[0].Process(inLFb);
+  sampR = strings_[1].Process(inRFb);
 
   // Distort + Clip
   sampL = overdrive_[0].Process(sampL);
@@ -149,6 +151,6 @@ void Engine::Process(float in, float &outL, float &outR) {
   sampR = 0.5f * (sampR + echoR);
 
   // ---> Output
-  outL = sampL * output_level_;
-  outR = sampR * output_level_;
+  outL = (sampL * blend_mix_ + inL * (1 - blend_mix_)) * output_level_;
+  outR = (sampR * blend_mix_ + inR * (1 - blend_mix_)) * output_level_;
 }
