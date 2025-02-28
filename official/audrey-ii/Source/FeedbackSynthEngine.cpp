@@ -142,6 +142,10 @@ void Engine::Process(float inL, float inR, float &outL, float &outR) {
   fb_delayline_[0].Write(sampL * fb_gain_);
   fb_delayline_[1].Write(sampR * fb_gain_);
 
+  // ---> Feedback loop blend
+  sampL = sampL * blend_mix_ + inL * (1 - blend_mix_);
+  sampR = sampR * blend_mix_ + inR * (1 - blend_mix_);
+
   // ---> Echo Delay
 
   echoL = echo_delay_[0]->Process(sampL * echo_send_);
@@ -151,6 +155,6 @@ void Engine::Process(float inL, float inR, float &outL, float &outR) {
   sampR = 0.5f * (sampR + echoR);
 
   // ---> Output
-  outL = (sampL * blend_mix_ + inL * (1 - blend_mix_)) * output_level_;
-  outR = (sampR * blend_mix_ + inR * (1 - blend_mix_)) * output_level_;
+  outL = sampL * output_level_;
+  outR = sampR * output_level_;
 }
